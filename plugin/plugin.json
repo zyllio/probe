@@ -1,0 +1,7 @@
+{
+  "name": "Probe Read",
+  "version": "1.0.0",
+  "description": "This plugins interprets Bluetooth probe message",
+  "company": "Zyllio team",
+  "icon": "https://studio.zyllio.com/assets/icon.png"
+}

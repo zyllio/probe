@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+  BLUETOOTH WEB
+
+  <button>TEST</button>
+
+  <script type="module">
+
+    async function start() {
+
+      const serviceUUID = '18424398-7cbc-11e9-8f9e-2a86e4085a59'; // UUID du service de température
+
+      const characteristicUUID = '772ae377-b3d2-ff8e-1042-5481d1e03456'; // UUID de la caractéristique de température
+
+      const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        // filters: [{ services: [serviceUUID] }],
+        optionalServices: [serviceUUID], // Assurez-vous que le service UUID est ajouté ici
+      })
+
+      console.log('Device found:', device.name)
+
+      const server = await device.gatt.connect()
+
+      console.log('Connected to GATT server', server)
+
+      const service = await server.getPrimaryService(serviceUUID);
+      console.log('Service found:', service)
+
+      const characteristic = await service.getCharacteristic(characteristicUUID);
+      console.log('Characteristic found:', characteristic);
+
+      if (characteristic.properties.notify) {
+        await characteristic.startNotifications();
+
+        const handleNotification = (event) => {
+
+          const value = new Uint8Array(event.target.value.buffer)
+          console.log('Notification reçue :', value)
+
+          const decodedValue = new TextDecoder('utf-8').decode(value);
+          console.log('Valeur décodée :', decodedValue);
+
+        }
+
+        characteristic.addEventListener('characteristicvaluechanged', handleNotification);
+
+        console.log('Notifications activées.');
+
+      } else {
+        console.log('La caractéristique ne prend pas en charge les notifications.');
+      }
+    }
+
+    document.querySelector('button').onclick = start
+
+
+  </script>
+
+</body>
+
+</html>

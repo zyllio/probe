@@ -17,14 +17,20 @@
 
     async function start() {
 
-      const serviceUUID = '18424398-7cbc-11e9-8f9e-2a86e4085a59'; // UUID du service de température
+      const SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb'; // from code
 
-      const characteristicUUID = '772ae377-b3d2-ff8e-1042-5481d1e03456'; // UUID de la caractéristique de température
+      const NOTIFY_FFF1_CHARACTERISTIC_UUID = '0000fff1-0000-1000-8000-00805f9b34fb'
+
+      const NOTIFY_FFF4_CHARACTERISTIC_UUID = '0000fff4-0000-1000-8000-00805f9b34fb'
+
+      const NOTIFY_FFF5_CHARACTERISTIC_UUID = '0000fff5-0000-1000-8000-00805f9b34fb'
+
+      const descriptorUUID = 0x2901
 
       const device = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
         // filters: [{ services: [serviceUUID] }],
-        optionalServices: [serviceUUID], // Assurez-vous que le service UUID est ajouté ici
+        optionalServices: [SERVICE_UUID], // Assurez-vous que le service UUID est ajouté ici
       })
 
       console.log('Device found:', device.name)
@@ -33,36 +39,101 @@
 
       console.log('Connected to GATT server', server)
 
-      const service = await server.getPrimaryService(serviceUUID);
+      const service = await server.getPrimaryService(SERVICE_UUID);
       console.log('Service found:', service)
 
-      const characteristic = await service.getCharacteristic(characteristicUUID);
-      console.log('Characteristic found:', characteristic);
+      const characteristic1 = await service.getCharacteristic(NOTIFY_FFF1_CHARACTERISTIC_UUID);
+      console.log('Characteristic1 found:', characteristic1);
 
-      if (characteristic.properties.notify) {
-        await characteristic.startNotifications();
+      const characteristic4 = await service.getCharacteristic(NOTIFY_FFF4_CHARACTERISTIC_UUID);
+      console.log('Characteristic4 found:', characteristic4);
 
-        const handleNotification = (event) => {
+      const characteristic5 = await service.getCharacteristic(NOTIFY_FFF5_CHARACTERISTIC_UUID);
+      console.log('Characteristic5 found:', characteristic5);
 
-          const value = new Uint8Array(event.target.value.buffer)
-          console.log('Notification reçue :', value)
+      // if (characteristic.readValue) {
 
-          const decodedValue = new TextDecoder('utf-8').decode(value);
-          console.log('Valeur décodée :', decodedValue);
+      //   const value = await characteristic.readValue();
+      //   console.log("Characteristic raw value ", value.buffer);
 
-        }
+      //   console.log('Characteristic value:', new TextDecoder('utf-8').decode(value));
 
-        characteristic.addEventListener('characteristicvaluechanged', handleNotification);
+      // }    
 
-        console.log('Notifications activées.');
+      const handleNotification5 = (event) => {
 
-      } else {
-        console.log('La caractéristique ne prend pas en charge les notifications.');
+        const value = new Uint8Array(event.target.value.buffer)
+        console.log('Notification5 reçue :', value)
+
+        // const decodedValue = new TextDecoder('utf-8').decode(value);
+        // console.log('Valeur5 décodée :', decodedValue);
+
       }
+
+      await characteristic5.startNotifications();
+
+      characteristic5.addEventListener('characteristicvaluechanged', handleNotification5);
+
+      await characteristic1.startNotifications();
+
+
+      const handleNotification1 = (event) => {
+
+        const value = new Uint8Array(event.target.value.buffer)
+        console.log('Notification1 reçue :', value)
+
+        // const decodedValue = new TextDecoder('utf-8').decode(value);
+        // console.log('Valeur1 décodée :', decodedValue);
+
+      }
+
+      characteristic1.addEventListener('characteristicvaluechanged', handleNotification1);
+
+
+      const data1 = new Uint8Array([
+        0x22,                      // Start byte
+        0x01,                     // Probe number (0x01 for probe 1, 0x02 for probe 2, etc.)
+        0x02,                   // Indicates both high and low temperatures are set
+        0x00, /* high temp */
+        0x00,        
+        0x00, /* low temp */
+        0x00,
+        0x22                       // End byte
+      ]);
+
+      await characteristic4.writeValue(data1);
+
+
+      const data2 = new Uint8Array([
+        0x22,                      // Start byte
+        0x02,                     // Probe number (0x01 for probe 1, 0x02 for probe 2, etc.)
+        0x02,                   // Indicates both high and low temperatures are set
+        0x00, /* high temp ° */
+        0x00,        
+        0x00, /* low temp */
+        0x00,
+        0x22                       // End byte
+      ]);
+
+      await characteristic4.writeValue(data2);
+
+      const batteryData = new Uint8Array([
+        0x24,
+        0x00,
+        0x00,
+        0x00,
+        0x00,   
+        0x00,
+        0x00,
+        0x24
+      ]);
+
+      await characteristic4.writeValue(batteryData);
+
     }
 
-    document.querySelector('button').onclick = start
 
+    document.querySelector('button').onclick = start
 
   </script>
 
